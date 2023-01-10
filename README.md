@@ -9,7 +9,7 @@ Important pre-work:
 
 Current work flow tought:
 - Normalisation     (WIP)     litrature (WIP)
-- Clusterng         (WIP)     litrature (WIP)
+- Clustering         (WIP)     litrature (WIP)
 - Differential      (WIP)     litrature (WIP)
 - SWITCH Genes      (WIP)     litrature (WIP)
 - Network analysis  (WIP)     litrature (WIP)
