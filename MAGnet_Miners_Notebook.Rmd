@@ -1,0 +1,64 @@
+---
+title: "Discovering regulatory switches in transcriptomics data"
+author: "Ramón Reszat, Luca Farinola, Patrick Mertens, Alaric Deboilly"
+date: "2023-01-11"
+output: html_document
+---
+
+```{r libraries, include=FALSE}
+library(ggplot2) # create plots for the presentation
+library(pcaMethods) # Bioconductor PCA methods
+library(limma) # differential gene expression analysis (DGEA)
+library(biomaRt) # download gene annotations from Ensembl
+```
+
+## Datasets
+First, load the original [MAGnet dataset](https://www.med.upenn.edu/magnet) and information on the study participants.
+```{r MAGnet, warning=FALSE}
+setwd('Data')
+
+# transcriptome of each sample from the NCBI MAGnet dataset
+gxData <- read.delim('MAGNET_GeneExpressionData_CPM_19112020.txt', header=TRUE, sep='\t', row.names=1)
+
+# participant information for the tissue samples in the dataset
+sampleInfo <- read.csv('MAGNET_SampleData_18112022.csv',header=TRUE, stringsAsFactor=TRUE)
+
+# load the list of genes that are suspected biomarkers for type 2 diabetes
+geneListT2D <- read.delim('MAGNET_Biomarkers_11012023.txt', header=FALSE, sep='\t')
+```
+
+We can download additional gene annotations from the [Ensembl](http://www.ensembl.org/index.html) database using the biomaRt API.
+```{r}
+# connect to the Ensembl genes database and select homo sapiens as a species
+ensembl = useEnsembl(biomart="genes", dataset="hsapiens_gene_ensembl", mirror='useast')
+
+# download the Ensembl IDs for the genes selected from literature research
+biomarkers <- getBM(attributes=c('ensembl_gene_id', 'hgnc_symbol'), filters='hgnc_symbol', values=geneListT2D, mart=ensembl)
+```
+
+## Clusters
+
+```{r pca}
+# compute PCA decomposition using SVD
+gxData.pca <- pca(t(gxData), method="svd", nPcs=5)
+```
+
+```{r score}
+scores <- scores(gxData.pca)
+df <- cbind(sampleInfo, scores)
+
+# calculate the percentage of variance explained for each PC
+explained_var <- sDev(gxData.pca)^2 / sum(sDev(gxData.pca)^2)
+
+PCAscore <- ggplot(df, aes(x=PC1, y=PC2, color=etiology)) +
+  geom_point() +
+  labs(
+    title = "PCA score plot clustered by etiology",
+    subtitle = "mRNA expression data",
+    tag = "Figure 1",
+    x = sprintf("PC1 (%1.2f%%)", 100*explained_var['PC1']),
+    y = sprintf("PC2 (%1.2f%%)", 100*explained_var['PC2'])
+	)
+
+PCAscore + theme_bw()
+```
