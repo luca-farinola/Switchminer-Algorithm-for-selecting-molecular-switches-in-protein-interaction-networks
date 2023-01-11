@@ -8,6 +8,7 @@ output: html_document
 ```{r libraries, include=FALSE}
 library(ggplot2) # create plots for the presentation
 library(pcaMethods) # Bioconductor PCA methods
+library(pheatmap)
 library(limma) # differential gene expression analysis (DGEA)
 library(biomaRt) # download gene annotations from Ensembl
 ```
@@ -23,8 +24,11 @@ gxData <- read.delim('MAGNET_GeneExpressionData_CPM_19112020.txt', header=TRUE, 
 # participant information for the tissue samples in the dataset
 sampleInfo <- read.csv('MAGNET_SampleData_18112022.csv',header=TRUE, stringsAsFactor=TRUE)
 
+# exon length of each gene for normalization of CPM to TPM
+exonLength <- read.delim('MAGNET_exonLengths.txt', header=TRUE, sep='\t', row.names=1)
+
 # load the list of genes that are suspected biomarkers for type 2 diabetes
-geneListT2D <- read.delim('MAGNET_Biomarkers_11012023.txt', header=FALSE, sep='\t')
+biomarkers <- read.delim('MAGNET_Biomarkers_11012023.txt', header=FALSE, sep='\t')
 ```
 
 Additionally, download gene annotations from the [Ensembl](http://www.ensembl.org/index.html) database using the biomaRt API.
@@ -33,7 +37,40 @@ Additionally, download gene annotations from the [Ensembl](http://www.ensembl.or
 ensembl = useEnsembl(biomart="genes", dataset="hsapiens_gene_ensembl", mirror='useast')
 
 # download the Ensembl IDs for the genes selected from literature research
-biomarkers <- getBM(attributes=c('ensembl_gene_id', 'hgnc_symbol'), filters='hgnc_symbol', values=geneListT2D, mart=ensembl)
+biomarkers <- getBM(attributes=c('ensembl_gene_id', 'hgnc_symbol'), filters='hgnc_symbol', values=biomarkers, mart=ensembl)
+```
+
+## Validating Biomarkers for Type II Diabetes
+
+$$
+TPM=\frac{\text{total reads mapped to gene} * 10^3}{\text{gene length in bp}} 
+$$
+
+```{r convert}
+cpm2tpm <- function(x) {
+	.t <- 2^(x) * 1E3 / exonLength[, 1]
+}
+gxData.tpm <- cpm2tpm(gxData)
+```
+
+```{r panel}
+marker_panel <- t(gxData.tpm[biomarkers$ensembl_gene_id,])
+colnames(marker_panel) <- biomarkers$hgnc_symbol
+marker_panel <- marker_panel[ , colSums(is.na(marker_panel))==0]
+
+dcm_assay <- marker_panel[sampleInfo$etiology == 'DCM',]
+dcm_assay <- dcm_assay[,c('RAPGEF3','KCNJ11','TNNI3','CAMK2D','CDKAL1','ADCY9','ADRA1B')]
+nf_assay <- marker_panel[sampleInfo$etiology == 'NF',]
+
+ground_truth <- sampleInfo[sampleInfo$etiology=='DCM',]
+y <- ground_truth[,c('sample_name','Diabetes')]
+
+panel <- pheatmap(dcm_assay, scale = 'column', treeheight_col = 0, show_rownames = TRUE)
+y_pred <- cutree(panel$tree_row, k=2)
+
+rownames(y) <- y$sample_name
+y$pred <- y_pred
+View(y)
 ```
 
 ## Differential Gene Expression Analysis
@@ -63,6 +100,7 @@ $$
 \end{cases} + 
 \beta_4 \text{ Age}
 $$
+
 ```{r model}
 # fit linear regression for each gene
 model <- lmFit(gxData, design)
