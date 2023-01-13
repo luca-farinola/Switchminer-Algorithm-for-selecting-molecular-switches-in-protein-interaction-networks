@@ -5,10 +5,9 @@ date: "2023-01-11"
 output: html_document
 ---
 
-```{r libraries, include=FALSE}
+```{r DGEA, include=FALSE}
 library(ggplot2) # create plots for the presentation
 library(pcaMethods) # Bioconductor PCA methods
-library(pheatmap)
 library(limma) # differential gene expression analysis (DGEA)
 library(biomaRt) # download gene annotations from Ensembl
 ```
@@ -38,39 +37,6 @@ ensembl = useEnsembl(biomart="genes", dataset="hsapiens_gene_ensembl", mirror='u
 
 # download the Ensembl IDs for the genes selected from literature research
 biomarkers <- getBM(attributes=c('ensembl_gene_id', 'hgnc_symbol'), filters='hgnc_symbol', values=biomarkers, mart=ensembl)
-```
-
-## Validating Biomarkers for Type II Diabetes
-
-$$
-TPM=\frac{\text{total reads mapped to gene} * 10^3}{\text{gene length in bp}} 
-$$
-
-```{r convert}
-cpm2tpm <- function(x) {
-	.t <- 2^(x) * 1E3 / exonLength[, 1]
-}
-gxData.tpm <- cpm2tpm(gxData)
-```
-
-```{r panel}
-marker_panel <- t(gxData.tpm[biomarkers$ensembl_gene_id,])
-colnames(marker_panel) <- biomarkers$hgnc_symbol
-marker_panel <- marker_panel[ , colSums(is.na(marker_panel))==0]
-
-dcm_assay <- marker_panel[sampleInfo$etiology == 'DCM',]
-dcm_assay <- dcm_assay[,c('RAPGEF3','KCNJ11','TNNI3','CAMK2D','CDKAL1','ADCY9','ADRA1B')]
-nf_assay <- marker_panel[sampleInfo$etiology == 'NF',]
-
-ground_truth <- sampleInfo[sampleInfo$etiology=='DCM',]
-y <- ground_truth[,c('sample_name','Diabetes')]
-
-panel <- pheatmap(dcm_assay, scale = 'column', treeheight_col = 0, show_rownames = TRUE)
-y_pred <- cutree(panel$tree_row, k=2)
-
-rownames(y) <- y$sample_name
-y$pred <- y_pred
-View(y)
 ```
 
 ## Differential Gene Expression Analysis
@@ -114,9 +80,105 @@ model <- eBayes(model, trend=TRUE)
 head(model$coefficients)
 ```
 
-```{r table}
+```{r genes}
 # generate top-tables of p-values and log-fold changes
-results <- topTable(model, coef=1, n=Inf, adjust="fdr")
+genes <- topTable(model, coef=1, n=Inf, adjust="fdr")
 
-head(results)
+genes <- genes[genes$adj.P.Val < 5E-2,]
+genes <- genes[abs(genes$logFC) > 1.5,]
+head(genes)
+```
+
+## Gene Correlation Network Analysis
+
+```{r, include=FALSE}
+library(Hmisc) # Harrell miscellaneous: rcorr function
+library(igraph) # graph and network analysis
+library(NbClust)
+library(factoextra)
+```
+
+```{r, include=FALSE}
+# load all R functions from the SwitchMiner in the project directory
+switchminer <- list.files(path=getwd(), pattern="*.R$", recursive=TRUE)
+sapply(switchminer, source)
+```
+
+```{r}
+# select genes from differential gene expression analysis and samples according to the study design
+data <- gxData[rownames(genes), (sampleInfo$etiology == 'NF') | (sampleInfo$etiology == 'DCM')]
+
+# options: c("pearson", "spearman"), c("holm", "hochberg", "hommel", "bonferroni", "BH", "BY", "fdr", "none")
+edge_list <- computeCorrelation(data, "spearman", "fdr")
+
+threshold_prc_corr <- 0.9
+
+threshold_corr <- quantile(edge_list$correlation, threshold_prc_corr)
+threshold_corr <- round(as.numeric(threshold_corr),digits=4)
+```
+
+```{r}
+corr <- ggplot(edge_list, aes(x=correlation)) +
+  geom_histogram() +
+  labs(
+    title="",
+    subtitle="",
+    tag="Figure 1",
+    x = "",
+    y = ""
+  )
+
+corr + theme_bw()
+```
+
+```{r}
+min_rho <- 0.1
+max_rho <- 0.9
+step_rho <- 0.05
+threshold_pval_adj <- 0.05
+
+# TODO: network integrity plot
+network_integrity <- checkNetworkIntegrity(edge_list, min_rho, max_rho, step_rho, threshold_pval_adj)
+```
+
+```{r}
+network <- buildCorrelationNetwork(edge_list, threshold_corr, threshold_pval_adj)
+w_adj <- createWeightedAdjMatrix(network)
+
+getScreePlot(w_adj)
+```
+
+```{r}
+# TODO: wrap into nice output object
+clustering <- getClustering(w_adj, 4, 100, 5)
+
+num_node <- nrow(w_adj)
+num_edge <- nrow(network)
+
+res <- list(network = network,
+            num_node = num_node, 
+            num_edge = num_edge,
+            w_adj = w_adj,
+            threshold_corr = threshold_corr,
+            idx = clustering$idx,
+            cluster_size = clustering$size,
+            WSS = clustering$WSS, 
+            TWSS = clustering$TWSS)
+```
+
+## Mining Regulatory Switches
+
+```{r, warning=FALSE}
+APCC <- computeAPCC(w_adj)
+res_deg <- computeDegree(w_adj,res$idx)
+hub_class <- getHubClassification(APCC,res_deg$deg)
+
+cartography <- buildCartography(genes,res$idx,res_deg,APCC,hub_class,res)
+
+getAPCCdistribution(cartography$attribute)
+```
+
+```{r}
+attribute_switch <- getSwitch(cartography$attribute)
+getHeatCartography(cartography$attribute)
 ```
