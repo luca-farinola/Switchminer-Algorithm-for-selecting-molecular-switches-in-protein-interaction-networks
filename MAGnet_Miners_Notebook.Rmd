@@ -26,19 +26,6 @@ sampleInfo <- read.csv('MAGNET_SampleData_18112022.csv',header=TRUE, stringsAsFa
 # exon length of each gene for normalization of CPM to TPM
 exonLength <- read.delim('MAGNET_exonLengths.txt', header=TRUE, sep='\t', row.names=1)
 
-# load the list of genes that are suspected biomarkers for type 2 diabetes
-biomarkers <- read.delim('MAGNET_Biomarkers_11012023.txt', header=FALSE, sep='\t')
-```
-
-Additionally, download gene annotations from the [Ensembl](http://www.ensembl.org/index.html) database using the biomaRt API.
-```{r}
-# connect to the Ensembl genes database and select homo sapiens as a species
-ensembl = useEnsembl(biomart="genes", dataset="hsapiens_gene_ensembl", mirror='useast')
-
-# download the Ensembl IDs for the genes selected from literature research
-biomarkers <- getBM(attributes=c('ensembl_gene_id', 'hgnc_symbol'), filters='hgnc_symbol', values=biomarkers, mart=ensembl)
-```
-
 ## Differential Gene Expression Analysis
 
 ```{r design}
