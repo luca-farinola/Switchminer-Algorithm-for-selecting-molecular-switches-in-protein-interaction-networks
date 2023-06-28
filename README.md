@@ -1,4 +1,4 @@
-  <h3 align="center">Graph Theory to discover Switch Genes in Crdiovascular System</h3>
+  <h3 align="center">Graph Theory to discover Switch Genes in Cardiovascular System</h3>
 
   <p align="center">
     Project Period 1 for System Biology 
