@@ -1,19 +1,30 @@
-# System Biology 22-23 Project
-Group name: Megnat Miners
-Project: Analysing RNA sequencing of heart biopsies
+  <h3 align="center">Graph Theory to discover Switch Genes in Crdiovascular System</h3>
 
-Important pre-work:
-- Study Design      (WIP)
-- Statistical Power (WIP)
+  <p align="center">
+    Project Period 1 for System Biology 
+  </p>
+</div>
 
+<!-- ABOUT THE PROJECT -->
+## About The Project
 
-Current work flow tought:
-- Normalisation     (WIP)     litrature (WIP)
-- Clustering         (WIP)     litrature (WIP)
-- Differential      (WIP)     litrature (WIP)
-- SWITCH Genes      (WIP)     litrature (WIP)
-- Network analysis  (WIP)     litrature (WIP)
+RNA sequencing data are used to construct protein correlation network and select nodes with interesting mathematical property (and therefore of biological interest) 
+we have downloaded and edited for our pourpose the code from the following github repo : 
 
+Bird eye view of the project:
+* Differential expression analysis with limma 
+* Co-epression  Network
+* Switch Miner algorithm
+  
+Switch Miner algorithm is described in the following article : 
 
-Other documents:
--Manuscript         (WIP)
+<!-- DATA -->
+### Data
+
+Data directory is needed to run the files. Those data include gene expression count data, 
+metadata with patient information, gene lenght for FPKM normalizzation. Those data are uploaded in zenodo at link below.  
+
+</a>
+<a href="https://doi.org/10.5281/zenodo.7790931">
+        <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.7790931.svg" alt="DOI">
+    </a>
