@@ -9,14 +9,16 @@
 ## About The Project
 
 RNA sequencing data are used to construct protein correlation network and select nodes with interesting mathematical property (and therefore of biological interest) 
-we have downloaded and edited for our pourpose the code from the following github repo : 
+we have downloaded and edited for our pourpose the code from the following github repo : [Switch_Miner_code](https://github.com/sportingCode/SWIMmeR/tree/main)
 
-Bird eye view of the project:
+Bird eye view of the project: (Further informations on those steps found in the pdf manuscript)
 * Differential expression analysis with limma 
 * Co-epression  Network
 * Switch Miner algorithm
+* investigating genetic bases for viral causes of DCM
+* comparing viral linked cases to standard DCM
   
-Switch Miner algorithm is described in the following article : 
+Switch Miner algorithm is described in the following article : [Switch_Miner_article](https://academic.oup.com/bioinformatics/article/38/2/586/6370739)
 
 <!-- DATA -->
 ### Data
