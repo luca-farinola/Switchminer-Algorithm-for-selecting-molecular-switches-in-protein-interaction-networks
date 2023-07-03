@@ -13,7 +13,7 @@ library(biomaRt) # download gene annotations from Ensembl
 ```
 
 ## Load MAGnet and Ensembl Datasets
-First, load the original [MAGnet dataset](https://www.med.upenn.edu/magnet) and information on the study participants.
+First, load the Dataset (found at the zenodo link)
 ```{r MAGnet, warning=FALSE}
 setwd('Data')
 
