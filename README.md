@@ -22,6 +22,8 @@ Bird eye view of the project: (Further informations on those steps found in the 
   
 Switch Miner algorithm is described in the following article : [Switch_Miner_article](https://academic.oup.com/bioinformatics/article/38/2/586/6370739)
 
+<img src="Data/overview.png" widht = "400" height= "300">
+
 <!-- DATA -->
 ### Data
 
