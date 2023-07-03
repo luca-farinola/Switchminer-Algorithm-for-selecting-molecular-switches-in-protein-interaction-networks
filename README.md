@@ -8,10 +8,12 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-RNA sequencing data are used to construct protein correlation network and select nodes with interesting mathematical property (and therefore of biological interest) 
+RNA sequencing data are used to study DCM (Dilated Cardiomyopathy). The aim is to construct protein correlation network and select nodes with interesting mathematical property (and therefore of biological interest) 
 we have downloaded and edited for our pourpose the code from the following github repo : [Switch_Miner_code](https://github.com/sportingCode/SWIMmeR/tree/main)
 
-Bird eye view of the project: (Further informations on those steps found in the pdf manuscript)
+After some licterature research we have selected genetic biomarker that might be linked to specific DCM cases linked to viral causes and runned again the analysis to compare results.   
+
+Bird eye view of the project: (Further informations on those steps found in the pdf manuscript and ppt presentation)
 * Differential expression analysis with limma 
 * Co-epression  Network
 * Switch Miner algorithm
@@ -24,7 +26,7 @@ Switch Miner algorithm is described in the following article : [Switch_Miner_art
 ### Data
 
 Data directory is needed to run the files. Those data include gene expression count data, 
-metadata with patient information, gene lenght. Those data are uploaded in zenodo at link below.  
+metadata with patient information, gene lenght (to calculate FPKM). Those data are uploaded in zenodo at link below. (vilar cases linked biomarkers are instead found in the Data folder)  
 
 </a>
 <a href="https://doi.org/10.5281/zenodo.7790931">
